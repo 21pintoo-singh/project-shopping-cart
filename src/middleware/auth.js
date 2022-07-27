@@ -1,4 +1,4 @@
-const userModel = require('../models/userModels')
+const userModel = require('../models/userModel')
 const validator = require('../utility/validation')
 const jwt = require('jsonwebtoken')
 const mongoose=require('mongoose')
