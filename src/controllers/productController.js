@@ -200,8 +200,15 @@ let filterProduct= async (req,res)=>{
         //priceArray.push({$lt:priceLessThan})
     }
     console.log(objectFilter)
+    let sortedBy=queryData.sortedBy
 
-    let findFilter= await productModel.find(objectFilter)
+    if(sortedBy){
+        if(!(sortedBy=="1" || sortedBy=="-1"))
+        return res.status(400).send({status:false,message:"You entered an invalid input sorted By can take only two Inputs 1 OR -1"})
+
+    }
+
+    let findFilter= await productModel.find(objectFilter).sort({price:sortedBy})
 
     if(findFilter.length==0)
     return res.status(404).send({status:false,message:"No product Found"})
