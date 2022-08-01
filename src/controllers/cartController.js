@@ -106,6 +106,9 @@ let createCart = async (req,res)=>{
 
     if(!data.quantity)
     return res.status(400).send({status:false,message:"quantity field is Required..."}) 
+    if(quantityRegex.test(data.quantity)==false)
+    
+    return res.status(400).send({status:false,message:"quantity should be above 0.. and should be positive integer only."})
 
     for(let i=0;i<findCart.items.length;i++){
         if(findCart.items[i].productId==productId){
