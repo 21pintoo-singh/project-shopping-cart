@@ -34,6 +34,9 @@ let createCart = async (req,res)=>{
     if(!cartId){
 
     let findCart= await cartModel.findOne({userId:userId})
+    if(findCart)
+    return res.status(200).send({status:true,message:"cart is created already please enter cartId ........."})
+    
     objectCreate.userId=userId
 
     if(!findCart){
