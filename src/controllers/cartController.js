@@ -5,7 +5,7 @@ const cartModel=require('../models/cartModel.js')
 const mongoose=require('mongoose')
 
 const validator=require('../utility/validation.js')
-const { findOneAndUpdate } = require('../models/userModel.js')
+const { findOneAndUpdate, findByIdAndRemove } = require('../models/userModel.js')
 
 var quantityRegex=/^\d*[1-9]\d*$/
 
@@ -160,16 +160,14 @@ let deleteCart= async (req,res)=>{
 
         if(!findUser) return res.status(404).send({status:false,message:"User does not exists"})
 
-        let cartId=data.cartId
-        if(!mongoose.isValidObjectId(cartId))
-        return res.status(400).send({status:false,message:"cartId is invalid"})
+       
 
-       let findCart= await cartModel.findOne({_id:cartId,userId:userId})
+       let findCart= await cartModel.findOne({userId:userId})
 
        if(!findCart)
        return res.status(404).send({status:false,message:"No cart found"})
 
-       let deleteData= await cartModel.findOneAndUpdate({_id:cartId,userId:userId},{$set :{items:[],totalPrice:0,totalItems:0}})
+       let deleteData= await cartModel.findOneAndUpdate({userId:userId},{$set :{items:[],totalPrice:0,totalItems:0}},{new:true})
 
        if(!deleteData)
        return res.status(404).send({status:false,message:"No cart found........"})
@@ -273,5 +271,27 @@ let updateCart= async (req,res)=>{
     }
 }
 
+let getCart= async (req,res)=>{
+    try {let userId=req.params.userId
 
-module.exports={createCart,deleteCart,updateCart}
+    if(!mongoose.isValidObjectId(userId))
+    return res.status(400).send({status:false,message:"You entered a invalid UserId in the Path params"})
+
+    let findUser=await userModel.findById(userId)
+    if(!findUser)
+    return res.status(404).send({status:false,message:"User not Found...."})
+
+    let findCart= await cartModel.findOne({userId:userId})
+
+    if(!findCart)
+    return res.status(404).send({status:false,message:"No cart exists....."})
+
+    return res.status(200).send({status:true,message:"success",data:findCart})
+} 
+catch(err) {
+    return res.status(500).send({status:false,message:err.message})
+}
+}
+
+
+module.exports={createCart,deleteCart,updateCart,getCart}
