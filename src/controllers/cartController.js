@@ -1,303 +1,305 @@
-const userModel=require('../models/userModel.js')
-const productModel=require('../models/productModel.js')
-const cartModel=require('../models/cartModel.js')
+const userModel = require('../models/userModel.js')
+const productModel = require('../models/productModel.js')
+const cartModel = require('../models/cartModel.js')
 
-const mongoose=require('mongoose')
+const mongoose = require('mongoose')
 
-const validator=require('../utility/validation.js')
+const validator = require('../utility/validation.js')
 const { findOneAndUpdate, findByIdAndRemove } = require('../models/userModel.js')
 
-var quantityRegex=/^\d*[1-9]\d*$/
+var quantityRegex = /^\d*[1-9]\d*$/
 
-let createCart = async (req,res)=>{
-   
+let createCart = async (req, res) => {
+
     try {
 
-    let userId=req.params.userId
+        let userId = req.params.userId
 
-    if(!mongoose.isValidObjectId(userId))
-    return res.status(400).send({status:false,message:"You entered an invalid UserId"})
+        if (!mongoose.isValidObjectId(userId))
+            return res.status(400).send({ status: false, message: "You entered an invalid UserId" })
 
-    let findUserId= await userModel.findOne({_id:userId})
-    if(!findUserId)
-    return res.status(404).send({status:false,message:"No user found"})
+        let findUserId = await userModel.findOne({ _id: userId })
+        if (!findUserId)
+            return res.status(404).send({ status: false, message: "No user found" })
 
-    let data=req.body
+        let data = req.body
 
-    let objectCreate={}
+        let objectCreate = {}
 
-     let cartId=data.cartId
+        //let cartId = data.cartId
 
-    // if(!mongoose.isValidObjectId(cartId))
-    // return res.status(400).send({status:false,message:"You entered an invalid cartId"})
+        // if(!mongoose.isValidObjectId(cartId))
+        // return res.status(400).send({status:false,message:"You entered an invalid cartId"})
 
-    if(!cartId){
+        // if(!cartId){
 
-    let findCart= await cartModel.findOne({userId:userId})
-    if(findCart)
-    return res.status(200).send({status:true,message:"cart is created already please enter cartId ........."})
-    
-    objectCreate.userId=userId
+        let findCart = await cartModel.findOne({ userId: userId })
+        // if (findCart)
+        //     return res.status(200).send({ status: true, message: "cart is created already please enter cartId ........." })
 
-    if(!findCart){
-        let productId=data.productId
-        if(!productId)
-        return res.status(400).send({status:false,message:"productId field is Required..."})
+        objectCreate.userId = userId
 
-    if(!mongoose.isValidObjectId(productId))
-    return res.status(400).send({status:false,message:"You entered an invalid productId"})
+        if (!findCart) {
+            let productId = data.productId
+            if (!productId)
+                return res.status(400).send({ status: false, message: "productId field is Required..." })
 
-    let findProduct= await productModel.findOne({_id:productId,isDeleted:false})
-    if(!findProduct)
-    return res.status(404).send({status:false, message:"No product found"})
+            if (!mongoose.isValidObjectId(productId))
+                return res.status(400).send({ status: false, message: "You entered an invalid productId" })
 
-    if(!data.quantity)
-    return res.status(400).send({status:false,message:"quantity field is Required..."})
+            let findProduct = await productModel.findOne({ _id: productId, isDeleted: false })
+            if (!findProduct)
+                return res.status(404).send({ status: false, message: "No product found" })
 
-    if(quantityRegex.test(data.quantity)==false)
-    return res.status(400).send({status:false,message:"quantity should be above 0.. and should be positive integer only."})
+            if (!data.quantity)
+                return res.status(400).send({ status: false, message: "quantity field is Required..." })
 
-    objectCreate.items=[]
-    let objectPush={}
-    objectPush.productId=productId
-    objectPush.quantity=data.quantity
+            if (quantityRegex.test(data.quantity) == false)
+                return res.status(400).send({ status: false, message: "quantity should be above 0.. and should be positive integer only." })
 
-    objectCreate.items.push(objectPush)
-    // objectCreate.items.push({})
-    // objectCreate.items[0].productId=productId
-    // objectCreate.items[0].quantity=data.quantity
+            objectCreate.items = []
+            let objectPush = {}
+            objectPush.productId = productId
+            objectPush.quantity = data.quantity
+
+            objectCreate.items.push(objectPush)
+            // objectCreate.items.push({})
+            // objectCreate.items[0].productId=productId
+            // objectCreate.items[0].quantity=data.quantity
 
 
-    let totalPrice=(data.quantity)*(findProduct.price)
-    objectCreate.totalPrice=totalPrice
+            let totalPrice = (data.quantity) * (findProduct.price)
+            objectCreate.totalPrice = totalPrice
 
-    let totalItems=objectCreate.items.length
-    objectCreate.toalItems=totalItems
+            let totalItems = objectCreate.items.length
+            objectCreate.toalItems = totalItems
 
-    let createNewCart= await cartModel.create(objectCreate)
-    
-    return res.status(201).send({status:false,message:"Cart is successfully created",data:createNewCart})
+            let createNewCart = await cartModel.create(objectCreate)
+            let addData= await cartModel.findOne({userId:userId}).select({items:{_id:0}}).populate([{path :"items.productId"}])
 
-    }
+            return res.status(201).send({ status: false, message: "Cart is successfully created", data: addData })
+
         }
+        //}
 
-    else {
+        else {
 
-        if(!mongoose.isValidObjectId(cartId))
-        return res.status(400).send({status:false,message:"You entered an invalid cartId"})
+            // if (!mongoose.isValidObjectId(cartId))
+            //     return res.status(400).send({ status: false, message: "You entered an invalid cartId" })
 
-       let findCart= await cartModel.findOne({_id:cartId,userId:userId})
-       
-       if(!findCart) 
-       return res.status(404).send({status:false,message:"No cart found"})
+            // let findCart = await cartModel.findOne({ _id: cartId, userId: userId })
 
-       objectCreate.userId=userId
+            // if (!findCart)
+            //     return res.status(404).send({ status: false, message: "No cart found" })
 
-        let productId=data.productId
-        if(!productId)
-        return res.status(400).send({status:false,message:"productId field is Required..."})
+            // objectCreate.userId = userId
 
-    if(!mongoose.isValidObjectId(productId))
-    return res.status(400).send({status:false,message:"You entered an invalid productId"})
+            let productId = data.productId
+            if (!productId)
+                return res.status(400).send({ status: false, message: "productId field is Required..." })
 
-    let findProduct= await productModel.findOne({_id:productId,isDeleted:false})
-    if(!findProduct)
-    return res.status(404).send({status:false, message:"No product found"})
+            if (!mongoose.isValidObjectId(productId))
+                return res.status(400).send({ status: false, message: "You entered an invalid productId" })
 
-    if(!data.quantity)
-    return res.status(400).send({status:false,message:"quantity field is Required..."}) 
-    if(quantityRegex.test(data.quantity)==false)
-    
-    return res.status(400).send({status:false,message:"quantity should be above 0.. and should be positive integer only."})
+            let findProduct = await productModel.findOne({ _id: productId, isDeleted: false })
+            if (!findProduct)
+                return res.status(404).send({ status: false, message: "No product found" })
 
-    for(let i=0;i<findCart.items.length;i++){
-        if(findCart.items[i].productId==productId){
-            let checkPrice=findProduct.price
-            findCart.items[i].quantity+=Number(data.quantity)
-            findCart.totalPrice=findCart.totalPrice+(Number(data.quantity)*checkPrice)
-            findCart.totalItems=findCart.items.length
+            if (!data.quantity)
+                return res.status(400).send({ status: false, message: "quantity field is Required..." })
+            if (quantityRegex.test(data.quantity) == false)
 
-            let updateCartForSameProductId=await cartModel.findOneAndUpdate({_id:cartId,userId:userId},{$set:findCart},{new:true})
-            return res.status(200).send({status:true,message:"product added successfully",data:updateCartForSameProductId})
+                return res.status(400).send({ status: false, message: "quantity should be above 0.. and should be positive integer only." })
 
-        } else continue;
+            for (let i = 0; i < findCart.items.length; i++) {
+                if (findCart.items[i].productId == productId) {
+                    let checkPrice = findProduct.price
+                    findCart.items[i].quantity += Number(data.quantity)
+                    findCart.totalPrice = findCart.totalPrice + (Number(data.quantity) * checkPrice)
+                    findCart.totalItems = findCart.items.length
 
+                    let updateCartForSameProductId = await cartModel.findOneAndUpdate({userId: userId }, { $set: findCart }, { new: true }).select({items:{_id:0}}).populate([{path:"items.productId"}])
+                    return res.status(200).send({ status: true, message: "product added successfully", data: updateCartForSameProductId })
+
+                } else continue;
+
+            }
+
+
+            objectCreate.items = findCart.items
+            let pushObject = {}
+            pushObject.productId = productId
+            pushObject.quantity = data.quantity
+            objectCreate.items.push(pushObject)
+
+
+            let initialPrice = findCart.totalPrice
+            let finalPrice = (data.quantity * findProduct.price) + initialPrice
+            objectCreate.totalPrice = finalPrice
+            objectCreate.totalItems = objectCreate.items.length
+
+
+
+            let addNewCart = await cartModel.findOneAndUpdate({userId: userId }, { $set: objectCreate }, { new: true }).select({items:{_id:0}}).populate([{path:"items.productId"}])
+
+            return res.status(200).send({ status: false, message: "Cart is added successfully", data: addNewCart })
+        }
     }
 
-    
-    objectCreate.items=findCart.items
-    let pushObject={}
-    pushObject.productId=productId
-    pushObject.quantity=data.quantity
-    objectCreate.items.push(pushObject)
-   
-
-    let initialPrice=findCart.totalPrice
-    let finalPrice=(data.quantity*findProduct.price)+initialPrice
-    objectCreate.totalPrice=finalPrice
-    objectCreate.totalItems=objectCreate.items.length
-
-
-
-    let addNewCart= await cartModel.findOneAndUpdate({_id:cartId,userId:userId},{$set:objectCreate},{new:true})
-
-    return res.status(200).send({status:false,message:"Cart is added successfully",data:addNewCart})
+    catch (err) {
+        return res.status(500).send({ status: false, message: err.message })
     }
-}
-
-catch(err){
-    return res.status(500).send({status:false,message:err.message})
-}
 
 }
 
-let deleteCart= async (req,res)=>{
+let deleteCart = async (req, res) => {
     try {
         let userId = req.params.userId
 
-        let data=req.body
+        let data = req.body
 
-        let objectDelete={}
+        let objectDelete = {}
 
-        if(!mongoose.isValidObjectId(userId))
-        return res.status(400).send({status:false,message:"UserId is Invalid"})
-        
-        let findUser= await userModel.findById(userId)
+        if (!mongoose.isValidObjectId(userId))
+            return res.status(400).send({ status: false, message: "UserId is Invalid" })
 
-        if(!findUser) return res.status(404).send({status:false,message:"User does not exists"})
+        let findUser = await userModel.findById(userId)
 
-       
+        if (!findUser) return res.status(404).send({ status: false, message: "User does not exists" })
 
-       let findCart= await cartModel.findOne({userId:userId})
 
-       if(!findCart)
-       return res.status(404).send({status:false,message:"No cart found"})
 
-       let deleteData= await cartModel.findOneAndUpdate({userId:userId},{$set :{items:[],totalPrice:0,totalItems:0}},{new:true})
+        let findCart = await cartModel.findOne({ userId: userId })
 
-       if(!deleteData)
-       return res.status(404).send({status:false,message:"No cart found........"})
-       return res.status(200).send({status:true,message:"success",data:deleteData})
+        if (!findCart)
+            return res.status(404).send({ status: false, message: "No cart found" })
+
+        let deleteData = await cartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalPrice: 0, totalItems: 0 } }, { new: true })
+
+        if (!deleteData)
+            return res.status(404).send({ status: false, message: "No cart found........" })
+        return res.status(200).send({ status: true, message: "success", data: deleteData })
 
     }
 
-    catch(err){
-        return res.status(400).send({status:false,message:err.message})
+    catch (err) {
+        return res.status(400).send({ status: false, message: err.message })
     }
 }
 
-let updateCart= async (req,res)=>{
-    try{
-        let userId=req.params.userId
+let updateCart = async (req, res) => {
+    try {
+        let userId = req.params.userId
 
-        let data=req.body
-        let {cartId,productId,removeProduct}=data
-        if(!cartId)
-        returnres.status(400).send({status:false,message:"cartId is required"})
+        let data = req.body
+        let { cartId, productId, removeProduct } = data
+        if (!cartId)
+            returnres.status(400).send({ status: false, message: "cartId is required" })
 
-        if(!mongoose.isValidObjectId(cartId))
-        return res.status(400).send({status:false,message:"cartId is invalid"})
+        if (!mongoose.isValidObjectId(cartId))
+            return res.status(400).send({ status: false, message: "cartId is invalid" })
 
-        let findCart= await cartModel.findOne({_id:cartId,userId:userId})
-        
-        if(!findCart)
-        return res.status(404).send({status:false,message:"No cart found"})
+        let findCart = await cartModel.findOne({ _id: cartId, userId: userId })
 
-        if(!productId)
-        returnres.status(400).send({status:false,message:"productId is required"})
+        if (!findCart)
+            return res.status(404).send({ status: false, message: "No cart found" })
 
-        if(!mongoose.isValidObjectId(cartId))
-        return res.status(400).send({status:false,message:"productId is invalid"})
+        if (!productId)
+            returnres.status(400).send({ status: false, message: "productId is required" })
 
-        let findProduct= await productModel.findById(productId)
-        
-        if(!findProduct)
-        return res.status(404).send({status:false,message:"No product found with respect to this productId"})
+        if (!mongoose.isValidObjectId(cartId))
+            return res.status(400).send({ status: false, message: "productId is invalid" })
 
-        if(!removeProduct){
-        return res.status(200).send({status:true,data:findCart})
-         }
+        let findProduct = await productModel.findById(productId)
 
-         else {
-            if(removeProduct==0){
-                for(let i=0;i<findCart.items.length;i++){
-                    if(findCart.items[i].productId==productId){
-                        
-                        let quantityCalculate=findCart.items[i].quantity
-                        let checkPrice=findProduct.price
-                        let totalPrice=findCart.totalPrice-(checkPrice*quantityCalculate)
+        if (!findProduct)
+            return res.status(404).send({ status: false, message: "No product found with respect to this productId" })
 
-                        findCart.items.splice(i,1)
+        if (!removeProduct) {
+            return res.status(200).send({ status: true, data: findCart })
+        }
 
-                        findCart.totalPrice=totalPrice
-                        findCart.totalItems=findCart.items.length
-                    
-                    } else 
-                    continue;
+        else {
+            if (removeProduct == 0) {
+                for (let i = 0; i < findCart.items.length; i++) {
+                    if (findCart.items[i].productId == productId) {
+
+                        let quantityCalculate = findCart.items[i].quantity
+                        let checkPrice = findProduct.price
+                        let totalPrice = findCart.totalPrice - (checkPrice * quantityCalculate)
+
+                        findCart.items.splice(i, 1)
+
+                        findCart.totalPrice = totalPrice
+                        findCart.totalItems = findCart.items.length
+
+                    } else
+                        continue;
                 }
 
-            } else if(removeProduct==1){
-                for(let j=0;j<findCart.items.length;j++){
-                    if(findCart.items[j].productId==productId){
-                        
-                        let checkQuantity=findCart.items[j].quantity
-                        let checkPrice=findProduct.price
-                         let totalPrice=findCart.totalPrice-(checkPrice*checkQuantity)
+            } else if (removeProduct == 1) {
+                for (let j = 0; j < findCart.items.length; j++) {
+                    if (findCart.items[j].productId == productId) {
+
+                        let checkQuantity = findCart.items[j].quantity
+                        let checkPrice = findProduct.price
+                        let totalPrice = findCart.totalPrice - (checkPrice * checkQuantity)
 
                         // let newQuantity=checkQuantity-1
                         // let totalPrice1=totalPrice-(checkPrice*newQuantity)
 
-                        if(checkQuantity==1){
-                            findCart.items.splice(j,1)
-                             findCart.totalPrice=totalPrice
-                             findCart.totalItems=findCart.items.length
+                        if (checkQuantity == 1) {
+                            findCart.items.splice(j, 1)
+                            findCart.totalPrice = totalPrice
+                            findCart.totalItems = findCart.items.length
                         } else {
-                            let newQuantity=checkQuantity-1
-                            let totalPrice1=totalPrice+(checkPrice*newQuantity)
-                            findCart.items[j].quantity=newQuantity
-                           findCart.totalPrice=totalPrice1
-                           findCart.totalItems=findCart.items.length
+                            let newQuantity = checkQuantity - 1
+                            let totalPrice1 = totalPrice + (checkPrice * newQuantity)
+                            findCart.items[j].quantity = newQuantity
+                            findCart.totalPrice = totalPrice1
+                            findCart.totalItems = findCart.items.length
                         }
-                    
+
                     }
                 }
             } else {
-                return res.status(400).send({status:false,message:"you have entered an invalid input of removeProduct--> it should be only 0 or 1"})
+                return res.status(400).send({ status: false, message: "you have entered an invalid input of removeProduct--> it should be only 0 or 1" })
 
             }
-         }
+        }
 
-         let updateData= await cartModel.findOneAndUpdate({_id:cartId,userId:userId},{$set:findCart},{new:true})
+        let updateData = await cartModel.findOneAndUpdate({ _id: cartId, userId: userId }, { $set: findCart }, { new: true })
 
-         return res.status(200).send({status:false,message:"success",data:updateData})
+        return res.status(200).send({ status: false, message: "success", data: updateData })
 
     }
-    catch(err){
-        return res.status(500).send({status:false,message:err.message})
+    catch (err) {
+        return res.status(500).send({ status: false, message: err.message })
     }
 }
 
-let getCart= async (req,res)=>{
-    try {let userId=req.params.userId
+let getCart = async (req, res) => {
+    try {
+        let userId = req.params.userId
 
-    if(!mongoose.isValidObjectId(userId))
-    return res.status(400).send({status:false,message:"You entered a invalid UserId in the Path params"})
+        if (!mongoose.isValidObjectId(userId))
+            return res.status(400).send({ status: false, message: "You entered a invalid UserId in the Path params" })
 
-    let findUser=await userModel.findById(userId)
-    if(!findUser)
-    return res.status(404).send({status:false,message:"User not Found...."})
+        let findUser = await userModel.findById(userId)
+        if (!findUser)
+            return res.status(404).send({ status: false, message: "User not Found...." })
 
-    let findCart= await cartModel.findOne({userId:userId})
+        let findCart = await cartModel.findOne({ userId: userId })
 
-    if(!findCart)
-    return res.status(404).send({status:false,message:"No cart exists....."})
+        if (!findCart)
+            return res.status(404).send({ status: false, message: "No cart exists....." })
 
-    return res.status(200).send({status:true,message:"success",data:findCart})
-} 
-catch(err) {
-    return res.status(500).send({status:false,message:err.message})
+        return res.status(200).send({ status: true, message: "success", data: findCart })
+    }
+    catch (err) {
+        return res.status(500).send({ status: false, message: err.message })
+    }
 }
-}
 
 
-module.exports={createCart,deleteCart,updateCart,getCart}
+module.exports = { createCart, deleteCart, updateCart, getCart }
