@@ -5,6 +5,7 @@ const userController=require("../controllers/userController")
 const verify=require("../middleware/auth")
 const productController=require("../controllers/productController")
 const cartController=require('../controllers/cartController')
+const orderController=require('../controllers/orderController')
 
 /*----------------------------USER API's-------------------------------------- */
 router.post("/register",userController.createUser)
@@ -36,6 +37,10 @@ router.put("/users/:userId/cart",cartController.updateCart)
 
 router.get("/users/:userId/cart",cartController.getCart)
 
+
+router.post("/users/:userId/orders",orderController.createOrder)
+
+router.put("/users/:userId/orders",orderController.updateOrder)
 
 
 

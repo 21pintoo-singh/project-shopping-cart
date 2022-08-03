@@ -194,7 +194,7 @@ let updateCart = async (req, res) => {
         let data = req.body
         let { cartId, productId, removeProduct } = data
         if (!cartId)
-            returnres.status(400).send({ status: false, message: "cartId is required" })
+            return res.status(400).send({ status: false, message: "cartId is required" })
 
         if (!mongoose.isValidObjectId(cartId))
             return res.status(400).send({ status: false, message: "cartId is invalid" })
@@ -205,7 +205,7 @@ let updateCart = async (req, res) => {
             return res.status(404).send({ status: false, message: "No cart found" })
 
         if (!productId)
-            returnres.status(400).send({ status: false, message: "productId is required" })
+            return res.status(400).send({ status: false, message: "productId is required" })
 
         if (!mongoose.isValidObjectId(cartId))
             return res.status(400).send({ status: false, message: "productId is invalid" })
@@ -214,6 +214,7 @@ let updateCart = async (req, res) => {
 
         if (!findProduct)
             return res.status(404).send({ status: false, message: "No product found with respect to this productId" })
+            
 
         if (!removeProduct) {
             return res.status(200).send({ status: true, data: findCart })
@@ -244,9 +245,6 @@ let updateCart = async (req, res) => {
                         let checkQuantity = findCart.items[j].quantity
                         let checkPrice = findProduct.price
                         let totalPrice = findCart.totalPrice - (checkPrice * checkQuantity)
-
-                        // let newQuantity=checkQuantity-1
-                        // let totalPrice1=totalPrice-(checkPrice*newQuantity)
 
                         if (checkQuantity == 1) {
                             findCart.items.splice(j, 1)

@@ -48,7 +48,7 @@ const createProduct=async (req,res)=>{
     if(priceRegex.test(price)==false)
     return res.status(400).send({status : false, message :"you entered a invalid price"})
 
-    objectCreate.price=price
+    object0Create.price=price
 
     if(!currencyId)
     return res.status(400).send({status:false, message:"currencyId field is Required"})
