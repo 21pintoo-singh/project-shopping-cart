@@ -60,6 +60,10 @@ const updateOrder=async(req,res)=>{
         if(!findUser)
         return res.status(404).send({status:false,message:"No such User found"})
 
+        let findCart=await cartModel.findOne({userId:userId})
+        if(!findCart)
+        return res.status(404).send({status:false,message:"No cart found....."})
+
         let orderId=req.body.orderId
 
         if(!orderId)
@@ -91,13 +95,16 @@ const updateOrder=async(req,res)=>{
 
                 checkCancellable.status=orderStatus
 
+                let updateCart=await cartModel.findOneAndUpdate({userId:userId},{$set:{items:[],totalPrice:0,totalItems:0}},{new:true})
                 let updateOrder= await orderModel.findOneAndUpdate({_id:orderId},{$set:checkCancellable},{new:true})
 
                 return res.status(200).send({status:true,message:"status updated successfully",data:updateOrder})
 
             }
-            else {
+            if(orderStatus=="completed") {
                 findOrder.status=orderStatus
+
+                let updateCart=await cartModel.findOneAndUpdate({userId:userId},{$set:{items:[],totalPrice:0,totalItems:0}},{new:true})
 
                 let updateOrder= await orderModel.findOneAndUpdate({_id:orderId},{$set:findOrder},{new:true})
 
@@ -105,7 +112,9 @@ const updateOrder=async(req,res)=>{
 
 
             }
-
+            else {
+                return res.status(400).send({status:false,message:"Order status is already pending..."})
+            }
 
         }
 

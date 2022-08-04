@@ -26,16 +26,9 @@ let createCart = async (req, res) => {
 
         let objectCreate = {}
 
-        //let cartId = data.cartId
-
-        // if(!mongoose.isValidObjectId(cartId))
-        // return res.status(400).send({status:false,message:"You entered an invalid cartId"})
-
-        // if(!cartId){
-
+        
         let findCart = await cartModel.findOne({ userId: userId })
-        // if (findCart)
-        //     return res.status(200).send({ status: true, message: "cart is created already please enter cartId ........." })
+       
 
         objectCreate.userId = userId
 
