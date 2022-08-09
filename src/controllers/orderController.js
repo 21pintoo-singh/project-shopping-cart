@@ -93,6 +93,8 @@ const updateOrder = async (req, res) => {
                 if (!checkCancellable)
                     return res.status(400).send({ status: false, message: "This order cannot be cancelled" })
 
+                    if(checkCancellable.status=='cancled')
+                    return res.status(400).send({status:false,message:"This order is already canceled"})
                 checkCancellable.status = status
 
                 let updateCart = await cartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalPrice: 0, totalItems: 0 } }, { new: true })
@@ -102,6 +104,10 @@ const updateOrder = async (req, res) => {
 
             }
             if (status == "completed") {
+                if(findOrder.status=="completed")
+                return res.status(400).send({status:false,message:"This order is already completed"})
+
+
                 findOrder.status = status
 
                 let updateCart = await cartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalPrice: 0, totalItems: 0 } }, { new: true })
@@ -113,7 +119,9 @@ const updateOrder = async (req, res) => {
 
             }
             else {
+                if(findOrder.status=="pending")
                 return res.status(400).send({ status: false, message: "Order status is already pending..." })
+
             }
 
         }
